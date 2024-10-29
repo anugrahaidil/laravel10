@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Hash;
 
 class LoginRegisterController extends Controller
 {
+    public function index()
+    {
+        return view('admin.dashboard'); // Tampilkan halaman khusus admin
+    }
     /**
      * Instantiate a new LoginRegisterController instance.
      */
@@ -84,12 +88,21 @@ class LoginRegisterController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->route('buku.index') // Redirect ke halaman buku
+
+            // Cek level pengguna
+            if (Auth::user()->level === 'admin') {
+                // Jika Admin, arahkan ke dashboard admin
+                return redirect()->route('admin.dashboard')
+                    ->withSuccess('You have successfully logged in as Admin!');
+            }
+
+            // Jika pengguna biasa, arahkan ke dashboard biasa
+            return redirect()->route('user.dashboard')
                 ->withSuccess('You have successfully logged in!');
         }
 
         return back()->withErrors([
-            'email' => 'Your provided credentials do not match our records.'
+            'email' => 'The provided credentials do not match our records.'
         ])->onlyInput('email');
     }
 
@@ -102,14 +115,17 @@ class LoginRegisterController extends Controller
     public function dashboard()
     {
         if (Auth::check()) {
-            return view('auth.dashboard');
+            // Periksa level pengguna dan arahkan ke dashboard sesuai
+            if (Auth::user()->level === 'admin') {
+                return view('admin.dashboard');
+            }
+            return view('auth.dashboard'); // Dashboard untuk pengguna biasa
         }
 
         return redirect()->route('login')
-            ->withErrors([
-                'email' => 'Please login to access the dashboard.'
-            ])->onlyInput('email');
+            ->withErrors(['email' => 'Please login to access the dashboard.']);
     }
+
 
     /**
      * Log out the user from application.
