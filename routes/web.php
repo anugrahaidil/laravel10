@@ -5,6 +5,12 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\BukuController;
 use App\Http\Controllers\Auth\LoginRegisterController;
+use App\Http\Controllers\UserController;
+
+
+Route::resource('users', UserController::class);
+
+Route::delete('/user/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
 
 Route::middleware(['auth'])->group(function () {

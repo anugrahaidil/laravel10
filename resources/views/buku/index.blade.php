@@ -16,6 +16,7 @@
                 <th>Penulis</th>
                 <th>Harga</th>
                 <th>Tanggal Terbit</th>
+                <th>Gambar</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -27,6 +28,13 @@
                     <td>{{ $buku->penulis }}</td>
                     <td>{{ "Rp. ".number_format($buku->harga, 2, ',', '.') }}</td>
                     <td>{{ \Carbon\Carbon::parse($buku->tgl_terbit)->format('d-m-Y') }}</td>
+                    <td>
+                        @if($buku->gambar)
+                            <img src="{{ asset('images/' . $buku->gambar) }}" alt="Gambar Buku" width="50">
+                        @else
+                            Tidak ada gambar
+                        @endif
+                    </td>
                     <td>
                         <a href="{{ route('buku.edit', $buku->id) }}" class="btn btn-warning btn-sm">Edit</a>
                         <form action="{{ route('buku.destroy', $buku->id) }}" method="POST" style="display: inline;">

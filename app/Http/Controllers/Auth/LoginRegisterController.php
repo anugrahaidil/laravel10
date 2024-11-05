@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class LoginRegisterController extends Controller
 {
@@ -45,13 +47,15 @@ class LoginRegisterController extends Controller
         $request->validate([
             'name' => 'required|string|max:250',
             'email' => 'required|email|max:255|unique:users',
-            'password' => 'required|min:8|confirmed'
+            'password' => 'required|min:8|confirmed',
+            'photo' => 'image|nullable|max:1999'
         ]);
 
         User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password)
+            'password' => Hash::make($request->password),
+            'photo' => $path
         ]);
 
         $credentials = $request->only('email', 'password');
@@ -61,6 +65,14 @@ class LoginRegisterController extends Controller
 
         return redirect()->route('dashboard')
             ->withSuccess('You have successfully registered & logged in!');
+
+        if ($request->hasFile('picture')) {
+            $filenameWithExt = $request->file('photo')->getClientOriginalName();
+            $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+            $extension = $request->file('photo')->getClientOriginalExtension();
+            $filenameSimpan = $filename . '_' . time() . '.' . $extension;
+            $path = $request->file('photo')->storeAs('photos', $filenameSimpan);
+        }
     }
 
     /**
@@ -142,4 +154,6 @@ class LoginRegisterController extends Controller
         return redirect()->route('login')
             ->withSuccess('You have logged out successfully!');
     }
+
+    
 }

@@ -3,8 +3,9 @@
 @section('content')
     <div class="container mt-5">
         <h4>Edit Buku</h4>
-        <form method="post" action="{{ route('buku.update', $buku->id) }}">
+        <form method="post" action="{{ route('buku.update', $buku->id) }}" enctype="multipart/form-data">
             @csrf
+            @method('PUT')
             <div class="form-group">
                 <label>Judul</label>
                 <input type="text" name="judul" value="{{ $buku->judul }}" class="form-control" required>
@@ -20,6 +21,13 @@
             <div class="form-group">
                 <label>Tanggal Terbit</label>
                 <input type="date" name="tgl_terbit" value="{{ $buku->tgl_terbit }}" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="gambar">Gambar</label>
+                <input type="file" name="gambar" class="form-control">
+                @if($buku->gambar)
+                    <img src="{{ asset('images/' . $buku->gambar) }}" alt="Gambar Buku" width="100">
+                @endif
             </div>
             <div class="form-group mt-3">
                 <button type="submit" class="btn btn-success">Simpan Perubahan</button>
