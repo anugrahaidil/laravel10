@@ -6,7 +6,9 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\BukuController;
 use App\Http\Controllers\Auth\LoginRegisterController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\GalleryController;
 
+Route::resource('gallery', GalleryController::class);
 
 Route::resource('users', UserController::class);
 
