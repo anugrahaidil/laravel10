@@ -3,46 +3,38 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use Illuminate\Support\Facades\File;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\UserRegisteredNotification;
 
 class UserController extends Controller
 {
-    public function index()
+    public function register(Request $request)
     {
-        if (!Auth::check()){
-            return redirect ()->route('login')
-                ->withErrors([
-                    'email' => 'Please login to access the dashboard.',
-                ])->onlyInput('email');
-        }
-        $users = User::get();
-        return view('users')->with('userss', $users);
+        // Validasi data
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6|confirmed',
+        ]);
+
+        // Simpan data ke database
+        $user = \App\Models\User::create([
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'password' => bcrypt($validatedData['password']),
+        ]);
+
+        // Siapkan data untuk email
+        $userData = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'registered_at' => now()->format('d-m-Y H:i:s'),
+        ];
+
+        // Kirimkan email notifikasi
+        Mail::to($user->email)->send(new UserRegisteredNotification($userData));
+
+        // Redirect dengan pesan sukses
+        return redirect()->route('login')->with('success', 'Pendaftaran berhasil! Silakan cek email Anda untuk notifikasi.');
     }
-
-    public function destroy(string $id)
-    {
-        // Cari data pengguna berdasarkan ID
-        $user = User::find($id);
-
-        // Buat path ke file gambar di folder publik
-        $file = public_path('storage/' . $user->photo);
-
-        try {
-            // Cek apakah file ada di lokasi penyimpanan
-            if (File::exists($file)) { 
-                File::delete($file); // Hapus file dari penyimpanan
-            }
-
-            // Hapus data pengguna dari database
-            $user->delete();
-
-            return redirect('user')->with('success', 'Berhasil hapus data');
-        } catch (\Throwable $th) {
-            return redirect('user')->with('error', 'Gagal hapus data');
-        }
-    }
-
 }
