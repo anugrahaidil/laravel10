@@ -11,9 +11,7 @@ use App\Http\Controllers\SendEmailController;
 
 Route::get('/register', [UserController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [UserController::class, 'register'])->name('register.submit');
-
 Route::post('/post-email', [SendEmailController::class, 'store'])->name('post-email');
-
 // Route untuk mengirim email
 Route::get('/send-mail', [SendEmailController::class, 'index'])->name('kirim-email');
 
