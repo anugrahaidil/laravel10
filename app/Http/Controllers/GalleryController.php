@@ -8,43 +8,15 @@ class GalleryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    /**
-     * @OA\Get(
-     *     path="/api/gallery",
-     *     tags={"Gallery"},
-     *     summary="Retrieve a list of gallery posts",
-     *     description="API untuk mendapatkan daftar galeri yang memiliki gambar",
-     *     operationId="getGallery",
-     *     @OA\Response(
-     *         response=200,
-     *         description="List of gallery posts",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="title", type="string", example="Gallery Post Title"),
-     *                 @OA\Property(property="picture", type="string", example="https://example.com/image.jpg"),
-     *                 @OA\Property(property="description", type="string", example="This is a gallery post description."),
-     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2024-01-01T00:00:00Z")
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function index(Request $request)
+    public function index()
     {
-        // Ambil data dari API
-        $response = Http::get('http://localhost:8000/api/gallery');
-        
-        // Periksa respons API
-        if ($response->ok()) {
-            $galleries = $response->json()['data']; // Data dari API
-            return view('gallery.index', compact('galleries'));
-        }
-    
-        // Jika gagal, tampilkan pesan error
-        return back()->withErrors('Gagal memuat data gallery dari API');
+        $data = array(
+            'id'=>"posts",
+            'menu'=>'Gallery',
+            'galleries'=> Post::where('picture', '!=',
+        '')->whereNotNull('picture')->orderBy('created_at', 'desc')->paginate(30)
+            );
+            return view('gallery.index')->with($data);
     }
     /**
      * Show the form for creating a new resource.
