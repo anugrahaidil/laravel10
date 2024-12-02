@@ -7,15 +7,9 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\File;
 
 class LoginRegisterController extends Controller
 {
-    public function index()
-    {
-        return view('admin.dashboard'); // Tampilkan halaman khusus admin
-    }
     /**
      * Instantiate a new LoginRegisterController instance.
      */
@@ -24,6 +18,16 @@ class LoginRegisterController extends Controller
         $this->middleware('guest')->except([
             'logout', 'dashboard'
         ]);
+    }
+
+    /**
+     * Display the admin dashboard.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        return view('admin.dashboard'); // Tampilkan halaman khusus admin
     }
 
     /**
@@ -51,6 +55,18 @@ class LoginRegisterController extends Controller
             'photo' => 'image|nullable|max:1999'
         ]);
 
+        // Logika penyimpanan file foto
+        if ($request->hasFile('photo')) {
+            $filenameWithExt = $request->file('photo')->getClientOriginalName();
+            $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+            $extension = $request->file('photo')->getClientOriginalExtension();
+            $filenameSimpan = $filename . '_' . time() . '.' . $extension;
+            $path = $request->file('photo')->storeAs('photos', $filenameSimpan);
+        } else {
+            $path = null;
+        }
+
+        // Buat pengguna baru
         User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -58,21 +74,13 @@ class LoginRegisterController extends Controller
             'photo' => $path
         ]);
 
+        // Otentikasi dan regenerasi sesi
         $credentials = $request->only('email', 'password');
-
         Auth::attempt($credentials);
         $request->session()->regenerate();
 
         return redirect()->route('dashboard')
             ->withSuccess('You have successfully registered & logged in!');
-
-        if ($request->hasFile('picture')) {
-            $filenameWithExt = $request->file('photo')->getClientOriginalName();
-            $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
-            $extension = $request->file('photo')->getClientOriginalExtension();
-            $filenameSimpan = $filename . '_' . time() . '.' . $extension;
-            $path = $request->file('photo')->storeAs('photos', $filenameSimpan);
-        }
     }
 
     /**
@@ -103,12 +111,10 @@ class LoginRegisterController extends Controller
 
             // Cek level pengguna
             if (Auth::user()->level === 'admin') {
-                // Jika Admin, arahkan ke dashboard admin
                 return redirect()->route('admin.dashboard')
                     ->withSuccess('You have successfully logged in as Admin!');
             }
 
-            // Jika pengguna biasa, arahkan ke dashboard biasa
             return redirect()->route('user.dashboard')
                 ->withSuccess('You have successfully logged in!');
         }
@@ -118,7 +124,6 @@ class LoginRegisterController extends Controller
         ])->onlyInput('email');
     }
 
-
     /**
      * Display a dashboard to authenticated users.
      *
@@ -126,18 +131,17 @@ class LoginRegisterController extends Controller
      */
     public function dashboard()
     {
-        if (Auth::check()) {
-            // Periksa level pengguna dan arahkan ke dashboard sesuai
-            if (Auth::user()->level === 'admin') {
-                return view('admin.dashboard');
-            }
-            return view('auth.dashboard'); // Dashboard untuk pengguna biasa
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Please login to access the dashboard.']);
         }
 
-        return redirect()->route('login')
-            ->withErrors(['email' => 'Please login to access the dashboard.']);
+        // Arahkan berdasarkan level
+        return match (Auth::user()->level) {
+            'admin' => view('admin.dashboard'),
+            default => view('auth.dashboard'),
+        };
     }
-
 
     /**
      * Log out the user from application.
@@ -154,6 +158,4 @@ class LoginRegisterController extends Controller
         return redirect()->route('login')
             ->withSuccess('You have logged out successfully!');
     }
-
-    
 }
